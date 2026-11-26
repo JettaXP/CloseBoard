@@ -141,6 +141,8 @@ public class LatinIME extends InputMethodService implements KeyboardActionListen
     private final DictionaryFacilitator mDictionaryFacilitator =
             DictionaryFacilitatorProvider.getDictionaryFacilitator(
                     false /* isNeededForSpellChecking */);
+    private int mDeleteRepeatCount = 0;
+
     final InputLogic mInputLogic = new InputLogic(this /* LatinIME */,
             this /* SuggestionStripViewAccessor */, mDictionaryFacilitator);
     // We expect to have only one decoder in almost all cases, hence the default capacity of 1.
@@ -1488,12 +1490,31 @@ public class LatinIME extends InputMethodService implements KeyboardActionListen
         if (Constants.CODE_SHORTCUT == event.getMKeyCode()) {
             mRichImm.switchToShortcutIme(this);
         }
+        if (event.isKeyRepeat() && Constants.CODE_DELETE == event.getMKeyCode()
+                && mSettings.getCurrent().mAcceleratedDeleteLongPress
+                && handleAcceleratedDeleteRepeat()) {
+            mKeyboardSwitcher.onEvent(event, getCurrentAutoCapsState(), getCurrentRecapitalizeState());
+            return;
+        }
         final InputTransaction completeInputTransaction =
                 mInputLogic.onCodeInput(mSettings.getCurrent(), event,
                         mKeyboardSwitcher.getKeyboardShiftMode(),
                         mKeyboardSwitcher.getCurrentKeyboardScriptId(), mHandler);
         updateStateAfterInputTransaction(completeInputTransaction);
         mKeyboardSwitcher.onEvent(event, getCurrentAutoCapsState(), getCurrentRecapitalizeState());
+    }
+
+    private boolean handleAcceleratedDeleteRepeat() {
+        if (mDeleteRepeatCount > Constants.DELETE_REPEAT_LINE_STAGE_AT) {
+            if (mInputLogic.deleteLineBeforeCursorOnRepeat()) {
+                return true;
+            }
+        } else if (mDeleteRepeatCount > Constants.DELETE_REPEAT_WORD_STAGE_AT) {
+            if (mInputLogic.deleteWordBeforeCursorOnRepeat()) {
+                return true;
+            }
+        }
+        return false;
     }
 
     // A helper method to split the code point and the key code. Ultimately, they should not be
@@ -1766,6 +1787,9 @@ public class LatinIME extends InputMethodService implements KeyboardActionListen
     @Override
     public void onPressKey(final int primaryCode, final int repeatCount,
                            final boolean isSinglePointer) {
+        if (primaryCode == Constants.CODE_DELETE) {
+            mDeleteRepeatCount = (0 == repeatCount) ? 0 : mDeleteRepeatCount + 1;
+        }
         mKeyboardSwitcher.onPressKey(primaryCode, isSinglePointer, getCurrentAutoCapsState(),
                 getCurrentRecapitalizeState());
         hapticAndAudioFeedback(primaryCode, repeatCount);
@@ -1775,6 +1799,9 @@ public class LatinIME extends InputMethodService implements KeyboardActionListen
     // press matching call is {@link #onPressKey(int,int,boolean)} above.
     @Override
     public void onReleaseKey(final int primaryCode, final boolean withSliding) {
+        if (primaryCode == Constants.CODE_DELETE) {
+            mDeleteRepeatCount = 0;
+        }
         mKeyboardSwitcher.onReleaseKey(primaryCode, withSliding, getCurrentAutoCapsState(),
                 getCurrentRecapitalizeState());
     }

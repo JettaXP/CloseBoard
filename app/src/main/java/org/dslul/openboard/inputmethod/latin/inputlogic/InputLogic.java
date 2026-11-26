@@ -2014,6 +2014,77 @@ public final class InputLogic {
     }
 
     /**
+     * Deletes the word immediately before the cursor, as triggered by an accelerated
+     * long-press delete repeat.
+     *
+     * @return true if a word was deleted, false if a word is currently being composed and
+     *         the deletion should fall back to the regular behavior.
+     */
+    public boolean deleteWordBeforeCursorOnRepeat() {
+        return deleteRangeBeforeCursorOnRepeat(true /* deleteWord */);
+    }
+
+    /**
+     * Deletes the text from the beginning of the current line up to the cursor, including
+     * the line feed if the whole line was already removed, as triggered by an accelerated
+     * long-press delete repeat.
+     *
+     * @return true if text was deleted, false if a word is currently being composed and
+     *         the deletion should fall back to the regular behavior.
+     */
+    public boolean deleteLineBeforeCursorOnRepeat() {
+        return deleteRangeBeforeCursorOnRepeat(false /* deleteWord */);
+    }
+
+    private boolean deleteRangeBeforeCursorOnRepeat(final boolean deleteWord) {
+        if (mWordComposer.isComposingWord()) {
+            return false;
+        }
+        final CharSequence beforeCursor =
+                mConnection.getTextBeforeCursor(Constants.EDITOR_CONTENTS_CACHE_SIZE, 0);
+        if (TextUtils.isEmpty(beforeCursor)) {
+            return false;
+        }
+        int index = beforeCursor.length();
+        int deleteLength = 0;
+        if (deleteWord) {
+            while (index > 0 && Character.isWhitespace(beforeCursor.charAt(index - 1))) {
+                index--;
+                deleteLength++;
+            }
+            while (index > 0) {
+                final int codePoint = Character.codePointBefore(beforeCursor, index);
+                if (!isWordCodePoint(codePoint)) {
+                    break;
+                }
+                final int charCount = Character.charCount(codePoint);
+                index -= charCount;
+                deleteLength += charCount;
+            }
+        } else {
+            while (index > 0) {
+                final char c = beforeCursor.charAt(index - 1);
+                index--;
+                deleteLength++;
+                if (Constants.CODE_ENTER == c) {
+                    break;
+                }
+            }
+        }
+        if (deleteLength <= 0) {
+            return false;
+        }
+        mConnection.beginBatchEdit();
+        mConnection.deleteTextBeforeCursor(deleteLength);
+        mConnection.endBatchEdit();
+        return true;
+    }
+
+    private static boolean isWordCodePoint(final int codePoint) {
+        return Character.isLetterOrDigit(codePoint) || Constants.CODE_SINGLE_QUOTE == codePoint;
+    }
+
+    /**
      * Sends a code point to the editor, using the most appropriate method.
      *
      * Normally we send code points with commitText, but there are some cases (where backward

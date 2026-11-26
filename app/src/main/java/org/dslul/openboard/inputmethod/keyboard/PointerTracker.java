@@ -1235,8 +1235,17 @@ public final class PointerTracker implements PointerTrackerQueue.Element,
     }
 
     private void startKeyRepeatTimer(final int repeatCount) {
-        final int delay =
+        int delay =
                 (repeatCount == 1) ? sParams.mKeyRepeatStartTimeout : sParams.mKeyRepeatInterval;
+        final Key key = getKey();
+        if (repeatCount > 1 && key != null && key.getCode() == Constants.CODE_DELETE
+                && Settings.getInstance().getCurrent().mAcceleratedDeleteLongPress) {
+            if (repeatCount > Constants.DELETE_REPEAT_LINE_STAGE_AT) {
+                delay /= 3;
+            } else if (repeatCount > Constants.DELETE_REPEAT_WORD_STAGE_AT) {
+                delay /= 2;
+            }
+        }
         sTimerProxy.startKeyRepeatTimerOf(this, repeatCount, delay);
     }
 

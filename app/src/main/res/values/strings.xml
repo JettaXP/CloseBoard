@@ -184,6 +184,10 @@
     <string name="delete_swipe">Delete swipe</string>
     <!-- Description for "delete_swipe" option. -->
     <string name="delete_swipe_summary">Perform a swipe from the delete key to select and remove bigger portions of text at once</string>
+    <!-- Preferences item for enabling accelerated long-press delete -->
+    <string name="accelerated_delete_long_press">Accelerated long-press delete</string>
+    <!-- Description for "accelerated_delete_long_press" option. -->
+    <string name="accelerated_delete_long_press_summary">When holding the delete key, start removing whole words and then whole lines</string>
     <!-- Preferences item for enabling trackpad space key -->
     <string name="space_trackpad">Space bar trackpad</string>
     <!-- Description for "space_trackpad" option. -->

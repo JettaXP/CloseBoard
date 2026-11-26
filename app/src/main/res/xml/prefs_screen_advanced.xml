@@ -77,6 +77,12 @@
             android:defaultValue="true" />
 
         <CheckBoxPreference
+            android:key="pref_accelerated_delete_long_press"
+            android:title="@string/accelerated_delete_long_press"
+            android:summary="@string/accelerated_delete_long_press_summary"
+            android:defaultValue="true" />
+
+        <CheckBoxPreference
             android:key="pref_autospace_after_punctuation"
             android:title="@string/autospace_after_punctuation"
             android:summary="@string/autospace_after_punctuation_summary"

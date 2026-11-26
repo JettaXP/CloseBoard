@@ -180,6 +180,10 @@ public final class Constants {
     public static final int GET_SUGGESTED_WORDS_TIMEOUT = 200;
     // How many continuous deletes at which to start deleting at a higher speed.
     public static final int DELETE_ACCELERATE_AT = 20;
+    // Key repeat count after which long-press delete starts deleting whole words.
+    public static final int DELETE_REPEAT_WORD_STAGE_AT = 16;
+    // Key repeat count after which long-press delete starts deleting whole lines.
+    public static final int DELETE_REPEAT_LINE_STAGE_AT = 28;
 
     public static final String WORD_SEPARATOR = " ";
 
